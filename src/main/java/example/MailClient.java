@@ -64,7 +64,7 @@ public class MailClient {
     for (int i = 0; i < count; i++) {
       proxy.send(message);
     }
-    mark -= System.nanoTime();
+    mark = System.nanoTime() - mark;
     System.out.println("Elapsed time = " + (mark / 1000000.0d) + "ms" + ",avg="
         + (mark / count) + "ns");
 
