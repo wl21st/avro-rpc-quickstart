@@ -39,7 +39,8 @@ public class MailClient {
   public static void main(String[] args) throws IOException {
 
     if (args.length != 5) {
-      System.out.println("Usage: <server_ip> <count> <to> <from> <body>");
+      System.out
+          .println("Usage: <server_ip> <count> <to> <from> <size_of_body>");
       System.exit(1);
     }
 
@@ -58,15 +59,18 @@ public class MailClient {
     Message message = new Message();
     message.setTo(new Utf8(args[2]));
     message.setFrom(new Utf8(args[3]));
-    message.setBody(new Utf8(args[4]));
+
+    int sizeOfBody = Integer.parseInt(args[4]);
+    message.setBody(new Utf8(new byte[sizeOfBody]));
 
     long mark = System.nanoTime();
     for (int i = 0; i < count; i++) {
       proxy.send(message);
     }
     mark = System.nanoTime() - mark;
-    System.out.println("Elapsed time = " + (mark / 1000000.0d) + "ms" + ",avg="
-        + (mark / count) + "ns");
+    System.out.println("Total " + count + " times, elapsed time = "
+        + (mark / 1000000.0d) + "ms" + ",throughput="
+        + (count / (mark / 1000000000.0d)) + " per second");
 
     // cleanup
     client.close();
