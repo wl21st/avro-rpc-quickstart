@@ -39,7 +39,6 @@ public class MailServer {
   public static class MailImpl implements Mail {
     // in this simple example just return details of the message
     public Utf8 send(Message message) {
-      System.out.println("Sending message");
       return new Utf8("Sending message to " + message.getTo().toString()
           + " from " + message.getFrom().toString() + " with body "
           + message.getBody().toString());
