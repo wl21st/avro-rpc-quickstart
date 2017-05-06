@@ -47,7 +47,7 @@ public class MailClient {
     Integer count = Integer.parseInt(args[1]);
 
     NettyTransceiver client = new NettyTransceiver(
-        new InetSocketAddress(65111));
+        new InetSocketAddress(sever, 65111));
 
     // client code - attach to the server and send a message
     Mail proxy = (Mail) SpecificRequestor.getClient(Mail.class, client);
