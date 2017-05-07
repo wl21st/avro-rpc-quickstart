@@ -21,22 +21,21 @@ package example;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-import org.apache.avro.ipc.NettyServer;
 import org.apache.avro.ipc.NettyTransceiver;
-import org.apache.avro.ipc.Server;
 import org.apache.avro.ipc.specific.SpecificRequestor;
-import org.apache.avro.ipc.specific.SpecificResponder;
 import org.apache.avro.util.Utf8;
 
 import example.proto.Mail;
 import example.proto.Message;
+import example.utils.CommonUtils;
+import example.utils.StatUtils;
 
 /**
- * Start a server, attach a client, and send a message.
+ * Mail client.
  */
 public class MailClient {
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws Exception {
 
     if (args.length != 5) {
       System.out
@@ -63,16 +62,54 @@ public class MailClient {
     int sizeOfBody = Integer.parseInt(args[4]);
     message.setBody(new Utf8(new byte[sizeOfBody]));
 
-    long mark = System.nanoTime();
+    long elapsed = System.nanoTime();
+
+    long entryElapsed[] = new long[count];
     for (int i = 0; i < count; i++) {
+      long timeUsed = System.nanoTime();
       proxy.send(message);
+      timeUsed = System.nanoTime() - timeUsed;
+
+      entryElapsed[i] = timeUsed;
     }
-    mark = System.nanoTime() - mark;
-    System.out.println("Total " + count + " times, elapsed time = "
-        + (mark / 1000000.0d) + "ms" + ",throughput="
-        + (count / (mark / 1000000000.0d)) + " per second");
+    elapsed = System.nanoTime() - elapsed;
+
+    report(elapsed, entryElapsed, sizeOfBody);
 
     // cleanup
     client.close();
   }
+
+  private static void report(long elapsed, long[] entryElapsed,
+      long sizeOfBody) {
+
+    double elapsedMs = CommonUtils.nsToMs(elapsed);
+    long count = entryElapsed.length;
+    double throughput = Math.round(1000d * (count / elapsedMs) * 1000d) / 1000d;
+    double average = elapsedMs / count;
+
+    System.out.println("Total " + count + " times, elapsed time = " + elapsedMs
+        + "ms" + ",throughput=" + throughput + " entries per second");
+
+    double min = StatUtils.min(entryElapsed);
+    double max = StatUtils.max(entryElapsed);
+    double stddev = StatUtils.stddev(entryElapsed);
+    double[] percentiles = StatUtils.percentile(entryElapsed, 6);
+
+    System.out.println("Single avg=" + CommonUtils.nsToMs(average) + "ms, min="
+        + CommonUtils.nsToMs(min) + "ms,max=" + CommonUtils.nsToMs(max) + "ms");
+
+    System.out.println("Stddev=" + CommonUtils.nsToMs(stddev) + "ms");
+
+    for (int i = 0; i < percentiles.length; i++) {
+      System.out.println((i + 1) + " stddev - " + percentiles[i] + "%");
+    }
+
+    long totalBytes = count * sizeOfBody;
+    System.out.println("Single entry content size=" + (sizeOfBody / 1024d)
+        + "KB, total bandwidth=" + Math.round(totalBytes / 1024d) / 1024d + "MB"
+        + ", bandwidth/second="
+        + Math.round(totalBytes / elapsedMs * 1000d / 1024d) / 1024d + "MB");
+  }
+
 }
