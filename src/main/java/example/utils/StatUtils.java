@@ -76,7 +76,7 @@ public class StatUtils {
 
     return result;
   }
-  
+
   /**
    * Return the percentiles of the distribution up to n of standard devidation.
    * 
@@ -104,6 +104,49 @@ public class StatUtils {
     for (long sample : samples) {
       for (int i = 0; i < n; i++) {
         if (sample >= lowValues[i] && sample <= highValues[i]) {
+          result[i]++;
+          break;
+        }
+      }
+    }
+
+    for (int i = 0; i < n; i++) {
+      result[i] = result[i] / samples.length * 100d;
+      if (i != 0) {
+        result[i] += result[i - 1];
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Return the percentiles of the distribution up to n of standard devidation,
+   * assuming the samples are all positive, ie, no need for lower ranges valeus
+   * check which will be negatives in all the cases.
+   * 
+   * @param samples
+   *          samples.
+   * @param n
+   *          up to nth of the standard deviation.
+   * @return the percent of the samples within the nth of the standard
+   *         devidation.
+   */
+  public static double[] percentile_positive(long[] samples, int n) {
+    double stddev = stddev(samples);
+    double avg = average(samples);
+
+    double[] result = new double[n];
+
+    double[] highValues = new double[n];
+
+    for (int i = 0; i < n; i++) {
+      highValues[i] = avg + (i + 1) * stddev;
+    }
+
+    for (long sample : samples) {
+      for (int i = 0; i < n; i++) {
+        if (sample <= highValues[i]) {
           result[i]++;
           break;
         }

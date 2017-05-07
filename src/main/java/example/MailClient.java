@@ -95,7 +95,7 @@ public class MailClient {
     double min = StatUtils.min(entryElapsedNs);
     double max = StatUtils.max(entryElapsedNs);
     double stddev = StatUtils.stddev(entryElapsedNs);
-    double[] percentiles = StatUtils.percentile(entryElapsedNs, 6);
+    double[] percentiles = StatUtils.percentile_positive(entryElapsedNs, 6);
 
     System.out
         .println(String.format("Single: avg=%.3fms, min=%.3fms, max=%.3fms",
