@@ -23,94 +23,101 @@ package example.utils;
  */
 public class StatUtils {
 
-    private StatUtils() {
+  private StatUtils() {
+  }
+
+  public static double stddev(long[] samples) {
+    double avg = average(samples);
+
+    double result = 0;
+    for (long sample : samples) {
+      result += (sample - avg) * (sample - avg);
     }
 
-    public static double stddev(long[] samples) {
-        double avg = average(samples);
+    result /= samples.length;
 
-        double result = 0;
-        for (long sample : samples) {
-            result += (sample - avg) * (sample - avg);
-        }
+    return Math.sqrt(result);
+  }
 
-        result /= samples.length;
+  public static double average(long[] samples) {
+    return sum(samples) / (samples.length * 1d);
+  }
 
-        return Math.sqrt(result);
+  public static double sum(long[] samples) {
+    double result = 0;
+
+    for (long sample : samples) {
+      result += sample;
     }
 
-    public static double average(long[] samples) {
-        return sum(samples) / (samples.length * 1d);
+    return result;
+  }
+
+  public static double min(long[] samples) {
+    long result = Long.MAX_VALUE;
+
+    for (long sample : samples) {
+      if (sample < result) {
+        result = sample;
+      }
     }
 
-    public static double sum(long[] samples) {
-        double result = 0;
+    return result;
+  }
 
-        for (long sample : samples) {
-            result += sample;
-        }
+  public static double max(long[] samples) {
+    long result = Long.MIN_VALUE;
 
-        return result;
+    for (long sample : samples) {
+      if (sample > result) {
+        result = sample;
+      }
     }
 
-    public static double min(long[] samples) {
-        long result = Long.MAX_VALUE;
+    return result;
+  }
+  
+  /**
+   * Return the percentiles of the distribution up to n of standard devidation.
+   * 
+   * @param samples
+   *          samples.
+   * @param n
+   *          up to nth of the standard deviation.
+   * @return the percent of the samples within the nth of the standard
+   *         devidation.
+   */
+  public static double[] percentile(long[] samples, int n) {
+    double stddev = stddev(samples);
+    double avg = average(samples);
 
-        for(long sample : samples) {
-            if (sample < result) {
-                result = sample;
-            }
-        }
+    double[] result = new double[n];
 
-        return result;
+    double[] lowValues = new double[n];
+    double[] highValues = new double[n];
+
+    for (int i = 0; i < n; i++) {
+      lowValues[i] = avg - (i + 1) * stddev;
+      highValues[i] = avg + (i + 1) * stddev;
     }
 
-    public static double max(long[] samples) {
-        long result = Long.MIN_VALUE;
-
-        for(long sample : samples) {
-            if (sample > result) {
-                result = sample;
-            }
+    for (long sample : samples) {
+      for (int i = 0; i < n; i++) {
+        if (sample >= lowValues[i] && sample <= highValues[i]) {
+          result[i]++;
+          break;
         }
-
-        return result;
+      }
     }
 
-
-    /**
-     */
-    public static double[] percentile(long[] samples, int n) {
-        double stddev = stddev(samples);
-        double avg = average(samples);
-
-        double[] result = new double[n];
-
-        double[] lowValues = new double[n];
-        double[] highValues = new double[n];
-
-        for(int i = 0; i < n ; i++) {
-            lowValues[i] = avg - (i+1) * stddev;
-            highValues[i] = avg + (i+1) * stddev;
-        }
-
-        for(long sample : samples) {
-            for(int i = 0; i < n; i++) {
-                if (sample >= lowValues[i] && sample <= highValues[i]) {
-                    result[i]++;
-                    break;
-                }
-            }
-        }
-
-        for(int i = 0; i < n; i++){
-            result[i] = result[i] / samples.length * 100d;
-            if (i != 0) {
-                result[i] += result[i-1];
-            }
-        }
-
-        return result;
+    for (int i = 0; i < n; i++) {
+      result[i] = result[i] / samples.length * 100d;
+      if (i != 0) {
+        result[i] += result[i - 1];
+      }
     }
+
+    return result;
+  }
 
 }

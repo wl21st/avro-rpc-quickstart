@@ -80,30 +80,43 @@ public class MailClient {
     client.close();
   }
 
-  private static void report(long elapsed, long[] entryElapsed,
+  private static void report(long elapsedNs, long[] entryElapsedNs,
       long sizeOfBody) {
 
-    double elapsedMs = CommonUtils.nsToMs(elapsed);
-    long count = entryElapsed.length;
+    double elapsedMs = CommonUtils.nsToMs(elapsedNs);
+    long count = entryElapsedNs.length;
     double throughput = Math.round(1000d * (count / elapsedMs) * 1000d) / 1000d;
     double average = elapsedMs / count;
 
-    System.out.println("Total " + count + " times, elapsed time = " + elapsedMs
-        + "ms" + ",throughput=" + throughput + " entries per second");
+    System.out.println(String.format(
+        "Total %d times, elapsed time = %.3fms, throughput=%.2f entries per second.",
+        count, elapsedMs, throughput));
 
-    double min = StatUtils.min(entryElapsed);
-    double max = StatUtils.max(entryElapsed);
-    double stddev = StatUtils.stddev(entryElapsed);
-    double[] percentiles = StatUtils.percentile(entryElapsed, 6);
+    double min = StatUtils.min(entryElapsedNs);
+    double max = StatUtils.max(entryElapsedNs);
+    double stddev = StatUtils.stddev(entryElapsedNs);
+    double[] percentiles = StatUtils.percentile(entryElapsedNs, 6);
 
-    System.out.println("Single avg=" + CommonUtils.nsToMs(average) + "ms, min="
-        + CommonUtils.nsToMs(min) + "ms,max=" + CommonUtils.nsToMs(max) + "ms");
+    System.out
+        .println(String.format("Single: avg=%.3fms, min=%.3fms, max=%.3fms",
+            CommonUtils.nsToMs(average), +CommonUtils.nsToMs(min),
+            CommonUtils.nsToMs(max)));
 
-    System.out.println("Stddev=" + CommonUtils.nsToMs(stddev) + "ms");
+    System.out
+        .println(String.format("Stddev=%.3fms", CommonUtils.nsToMs(stddev)));
 
     for (int i = 0; i < percentiles.length; i++) {
-      System.out.println((i + 1) + " stddev - " + percentiles[i] + "%");
+      System.out
+          .println(String.format("%.3f percent OR %.0f response time <= %.3fms",
+              percentiles[i], percentiles[i] * count,
+              CommonUtils.nsToMs(average + (i + 1) * stddev)));
     }
+
+    System.out
+        .println(String.format("%.3f percent OR %.0f response time > %.3fms",
+            100d - percentiles[percentiles.length - 1],
+            (100d - percentiles[percentiles.length - 1]) * count,
+            CommonUtils.nsToMs(average + percentiles.length * stddev)));
 
     long totalBytes = count * sizeOfBody;
     System.out.println("Single entry content size=" + (sizeOfBody / 1024d)
