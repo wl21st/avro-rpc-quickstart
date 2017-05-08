@@ -119,10 +119,8 @@ public class MailClient {
             CommonUtils.nsToMs(average + percentiles.length * stddev)));
 
     long totalBytes = count * sizeOfBody;
-    System.out.println("Single entry content size=" + (sizeOfBody / 1024d)
-        + "KB, total bandwidth=" + Math.round(totalBytes / 1024d) / 1024d + "MB"
-        + ", bandwidth/second="
-        + Math.round(totalBytes / elapsedMs * 1000d / 1024d) / 1024d + "MB");
+    System.out.println(
+        String.format("Single entry content size=%.3fKB, total bandwidth=%.3fMB, bandwidth consumption/second=%.3fMB", sizeOfBody / 1024d, totalBytes / 1024d / 1024d, totalBytes / elapsedMs * 1000d / 1024d / 1024d));
   }
 
 }
